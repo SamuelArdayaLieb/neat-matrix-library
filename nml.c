@@ -135,7 +135,7 @@ nml_mat *nml_mat_new(unsigned int num_rows, unsigned int num_cols) {
   NP_CHECK(m);
   m->num_rows = num_rows;
   m->num_cols = num_cols;
-  m->is_square = (num_rows == num_cols) ? 1 : 0;
+  m->is_square = (num_rows == num_cols) ? true : false;
   m->data = calloc(m->num_rows, sizeof(*m->data));
   NP_CHECK(m->data);
   int i;

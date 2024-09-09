@@ -21,6 +21,7 @@ extern "C" {
 #ifndef nml_UTIL
 #define nml_UTIL
 
+#include <stdbool.h>
 #include "nml_util.h"
 
 #define NML_MIN_COEF 0.000000000000001
@@ -34,7 +35,7 @@ typedef struct nml_mat_s {
   unsigned int num_rows;
   unsigned int num_cols;
   nml_data_t **data;
-  int is_square;
+  bool is_square;
 } nml_mat;
 
 typedef struct nml_mat_lup_s {
