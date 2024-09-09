@@ -120,7 +120,7 @@ function examples {
   ls ${EXAMPLES}/*.c | while read file ;
     do
       echo -e "\t $file -> ${GREEN}${file%%.*}.ex${NC}"
-      ${CC} ${CCFLAGS_EXAMPLES} ${file} -L ./${EXAMPLES}/lib -l${LIB_NAME_SIMPLE} -o ${file%%.*}.ex
+      ${CC} ${CCFLAGS_EXAMPLES} ${file} -L ./${EXAMPLES}/lib -l${LIB_NAME_SIMPLE} -lm -o ${file%%.*}.ex
     done
 }
 
@@ -132,7 +132,7 @@ function tests {
   ls ${TESTS}/*.c | while read file ;
     do 
       echo -e "\t $file -> ${file%%.*}.ex${NC}"
-      ${CC} ${CCFLAGS_EXAMPLES} ${file} -L ./${TESTS}/lib -l${LIB_NAME_SIMPLE} -o ${file%%.*}.ex
+      ${CC} ${CCFLAGS_EXAMPLES} ${file} -L ./${TESTS}/lib -l${LIB_NAME_SIMPLE} -lm -o ${file%%.*}.ex
     done
   echo -e "${YELLOW}Running Tests:${NC}"
   ls ${TESTS}/*ex | while read file ;
