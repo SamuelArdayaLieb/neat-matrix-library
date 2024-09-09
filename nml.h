@@ -71,8 +71,8 @@ void nml_mat_free(nml_mat *matrix);
 // Matrix Equality
 //
 // *****************************************************************************
-int nml_mat_eqdim(nml_mat *m1, nml_mat *m2);
-int nml_mat_eq(nml_mat *m1, nml_mat *m2, nml_data_t tolerance);
+bool nml_mat_eqdim(nml_mat *m1, nml_mat *m2);
+bool nml_mat_eq(nml_mat *m1, nml_mat *m2, nml_data_t tolerance);
 
 // *****************************************************************************
 //

@@ -249,7 +249,7 @@ void nml_mat_free(nml_mat *matrix) {
 // *****************************************************************************
 
 // Checks if two matrices have the same dimesions
-int nml_mat_eqdim(nml_mat *m1, nml_mat *m2) {
+bool nml_mat_eqdim(nml_mat *m1, nml_mat *m2) {
   return (m1->num_cols == m2->num_cols) &&
           (m1->num_rows == m2->num_rows);
 }
@@ -257,19 +257,19 @@ int nml_mat_eqdim(nml_mat *m1, nml_mat *m2) {
 // Checks if two matrices have the same dimensions, and the elements
 // are all equal to each other with a given tolerance;
 // For exact equality use tolerance = 0.0
-int nml_mat_eq(nml_mat *m1, nml_mat *m2, nml_data_t tolerance) {
+bool nml_mat_eq(nml_mat *m1, nml_mat *m2, nml_data_t tolerance) {
   if (!nml_mat_eqdim(m1, m2)) {
-    return 0;
+    return false;
   }
   int i, j;
   for(i = 0; i < m1->num_rows; i++) {
     for(j = 0; j < m1->num_cols; j++) {
       if (fabs(m1->data[i][j] - m2->data[i][j]) > tolerance) {
-        return 0;
+        return false;
       }
     }
   }
-  return 1;
+  return true;
 }
 
 // *****************************************************************************
