@@ -63,8 +63,8 @@ void nml_vlog(
 #endif
 }
 
-double nml_rand_interval(double min, double max) {
-  double d;
-  d = (double) rand() / ((double) RAND_MAX + 1);
+nml_data_t nml_rand_interval(nml_data_t min, nml_data_t max) {
+  nml_data_t d;
+  d = (nml_data_t) rand() / ((nml_data_t) RAND_MAX + 1);
   return (min + d * (max - min));
 }

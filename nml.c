@@ -146,7 +146,7 @@ nml_mat *nml_mat_new(unsigned int num_rows, unsigned int num_cols) {
   return m;
 }
 
-nml_mat *nml_mat_rnd(unsigned int num_rows, unsigned int num_cols, double min, double max) {
+nml_mat *nml_mat_rnd(unsigned int num_rows, unsigned int num_cols, nml_data_t min, nml_data_t max) {
   nml_mat *r = nml_mat_new(num_rows, num_cols);
   int i, j;
   for(i = 0; i < num_rows; i++) {
@@ -163,7 +163,7 @@ nml_mat *nml_mat_sqr(unsigned int size) {
   return nml_mat_new(size, size);
 }
 
-nml_mat *nml_mat_sqr_rnd(unsigned int size, double min, double max) {
+nml_mat *nml_mat_sqr_rnd(unsigned int size, nml_data_t min, nml_data_t max) {
   return nml_mat_rnd(size, size, min, max);
 }
 
@@ -182,7 +182,7 @@ nml_mat *nml_mat_eye(unsigned int size) {
 
 // Dynamically allocates a new matrix struct
 // Initialise the matrix by reading values from a vector
-nml_mat *nml_mat_from(unsigned int num_rows, unsigned int num_cols, unsigned int n_vals, double *vals) {
+nml_mat *nml_mat_from(unsigned int num_rows, unsigned int num_cols, unsigned int n_vals, nml_data_t *vals) {
   nml_mat *m = nml_mat_new(num_rows, num_cols);
   int i, j, v_idx;
   for(i = 0; i < m->num_rows; i++) {
@@ -257,7 +257,7 @@ int nml_mat_eqdim(nml_mat *m1, nml_mat *m2) {
 // Checks if two matrices have the same dimensions, and the elements
 // are all equal to each other with a given tolerance;
 // For exact equality use tolerance = 0.0
-int nml_mat_eq(nml_mat *m1, nml_mat *m2, double tolerance) {
+int nml_mat_eq(nml_mat *m1, nml_mat *m2, nml_data_t tolerance) {
   if (!nml_mat_eqdim(m1, m2)) {
     return 0;
   }
@@ -302,7 +302,7 @@ void nml_mat_printf(nml_mat *matrix, const char *d_fmt) {
 //
 // *****************************************************************************
 
-double nml_mat_get(nml_mat *matrix, unsigned int i, unsigned int j) {
+nml_data_t nml_mat_get(nml_mat *matrix, unsigned int i, unsigned int j) {
   return matrix->data[i][j];
 }
 
@@ -329,12 +329,12 @@ nml_mat *nml_mat_row_get(nml_mat *m, unsigned int row) {
   return r;
 }
 
-void nml_mat_set(nml_mat *matrix, unsigned int i, unsigned int j, double value) {
+void nml_mat_set(nml_mat *matrix, unsigned int i, unsigned int j, nml_data_t value) {
   matrix->data[i][j] = value;
 }
 
 // Sets all elements of a matrix to a given value
-void nml_mat_all_set(nml_mat *matrix, double value) {
+void nml_mat_all_set(nml_mat *matrix, nml_data_t value) {
   int i, j;
   for(i = 0; i < matrix->num_rows; i++) {
     for(j = 0; j < matrix->num_cols; j++) {
@@ -344,7 +344,7 @@ void nml_mat_all_set(nml_mat *matrix, double value) {
 }
 
 // Sets all elements of the matrix to given value
-int nml_mat_diag_set(nml_mat *m, double value) {
+int nml_mat_diag_set(nml_mat *m, nml_data_t value) {
   if (!m->is_square) {
     NML_FERROR(CANNOT_SET_DIAG, value);
     return 0;
@@ -356,7 +356,7 @@ int nml_mat_diag_set(nml_mat *m, double value) {
   return 1;
 }
 
-nml_mat *nml_mat_row_mult(nml_mat *m, unsigned int row, double num) {
+nml_mat *nml_mat_row_mult(nml_mat *m, unsigned int row, nml_data_t num) {
   nml_mat *r = nml_mat_cp(m);
   if (!nml_mat_row_mult_r(r, row, num)) {
     nml_mat_free(r);
@@ -365,7 +365,7 @@ nml_mat *nml_mat_row_mult(nml_mat *m, unsigned int row, double num) {
   return r;
 }
 
-int nml_mat_row_mult_r(nml_mat *m, unsigned int row, double num) {
+int nml_mat_row_mult_r(nml_mat *m, unsigned int row, nml_data_t num) {
   if (row>= m->num_rows) {
     NML_FERROR(CANNOT_ROW_MULTIPLY, row, m->num_rows);
     return 0;
@@ -377,7 +377,7 @@ int nml_mat_row_mult_r(nml_mat *m, unsigned int row, double num) {
   return 1;
 }
 
-nml_mat *nml_mat_col_mult(nml_mat *m, unsigned int col, double num) {
+nml_mat *nml_mat_col_mult(nml_mat *m, unsigned int col, nml_data_t num) {
   nml_mat *r = nml_mat_cp(m);
   if (!nml_mat_col_mult_r(r, col, num)) {
     nml_mat_free(r);
@@ -386,7 +386,7 @@ nml_mat *nml_mat_col_mult(nml_mat *m, unsigned int col, double num) {
   return r;
 }
 
-int nml_mat_col_mult_r(nml_mat *m, unsigned int col, double num) {
+int nml_mat_col_mult_r(nml_mat *m, unsigned int col, nml_data_t num) {
   if (col>=m->num_cols) {
     NML_FERROR(CANNOT_COL_MULTIPLY, col, m->num_cols);
     return 0;
@@ -398,7 +398,7 @@ int nml_mat_col_mult_r(nml_mat *m, unsigned int col, double num) {
   return 1;
 }
 
-nml_mat *nml_mat_row_addrow(nml_mat *m, unsigned int where, unsigned int row, double multiplier) {
+nml_mat *nml_mat_row_addrow(nml_mat *m, unsigned int where, unsigned int row, nml_data_t multiplier) {
   nml_mat *r = nml_mat_cp(m);
   if (!nml_mat_row_addrow_r(m, where, row, multiplier)) {
     nml_mat_free(r);
@@ -407,7 +407,7 @@ nml_mat *nml_mat_row_addrow(nml_mat *m, unsigned int where, unsigned int row, do
   return r;
 }
 
-int nml_mat_row_addrow_r(nml_mat *m, unsigned int where, unsigned int row, double multiplier) {
+int nml_mat_row_addrow_r(nml_mat *m, unsigned int where, unsigned int row, nml_data_t multiplier) {
 
   if (where >= m->num_rows || row >= m->num_rows) {
     NML_FERROR(CANNOT_ADD_TO_ROW, multiplier, row, where, m->num_rows);
@@ -420,13 +420,13 @@ int nml_mat_row_addrow_r(nml_mat *m, unsigned int where, unsigned int row, doubl
   return 1;
 }
 
-nml_mat *nml_mat_smult(nml_mat *m, double num) {
+nml_mat *nml_mat_smult(nml_mat *m, nml_data_t num) {
   nml_mat *r = nml_mat_cp(m);
   nml_mat_smult_r(r, num);
   return r;
 }
 
-int nml_mat_smult_r(nml_mat *m, double num) {
+int nml_mat_smult_r(nml_mat *m, nml_data_t num) {
   int i, j;
   for(i = 0; i < m->num_rows; i++) {
     for(j = 0; j < m->num_cols; j++) {
@@ -490,7 +490,7 @@ int nml_mat_row_swap_r(nml_mat *m, unsigned int row1, unsigned int row2) {
     NML_FERROR(CANNOT_SWAP_ROWS, row1, row2, m->num_rows);
     return 0;
   }
-  double *tmp = m->data[row2];
+  nml_data_t *tmp = m->data[row2];
   m->data[row2] = m->data[row1];
   m->data[row1] = tmp;
   return 1;
@@ -510,7 +510,7 @@ int nml_mat_col_swap_r(nml_mat *m, unsigned int col1, unsigned int col2) {
     NML_FERROR(CANNOT_SWAP_ROWS, col1, col2, m->num_cols);
     return 0;
   }
-  double tmp;
+  nml_data_t tmp;
   int j;
   for(j = 0; j < m->num_rows; j++) {
     tmp = m->data[j][col1];
@@ -695,12 +695,12 @@ nml_mat *nml_mat_transp(nml_mat *m) {
   return r;
 }
 
-double nml_mat_trace(nml_mat* m) {
+nml_data_t nml_mat_trace(nml_mat* m) {
   if (!m->is_square) {
     NML_ERROR(CANNOT_TRACE);
   }
   int i;
-  double trace = 0.0;
+  nml_data_t trace = 0.0;
   for(i = 0; i < m->num_rows; i++) {
     trace += m->data[i][i];
   }
@@ -732,8 +732,8 @@ int _nml_mat_pivotidx(nml_mat *m, unsigned int col, unsigned int row) {
 // If pivot is not found, return -1
 int _nml_mat_pivotmaxidx(nml_mat *m, unsigned int col, unsigned int row) {
   int i, maxi;
-  double micol;
-  double max = fabs(m->data[row][col]);
+  nml_data_t micol;
+  nml_data_t max = fabs(m->data[row][col]);
   maxi = row;
   for(i = row; i < m->num_rows; i++) {
     micol = fabs(m->data[i][col]);
@@ -822,7 +822,7 @@ nml_mat *nml_mat_rref(nml_mat *m) {
 int _nml_mat_absmaxr(nml_mat *m, unsigned int k) {
   // Find max id on the column;
   int i;
-  double max = m->data[k][k];
+  nml_data_t max = m->data[k][k];
   int maxIdx = k;
   for(i = k+1; i < m->num_rows; i++) {
     if (fabs(m->data[i][k]) > max) {
@@ -873,7 +873,7 @@ nml_mat_lup *nml_mat_lup_solve(nml_mat *m) {
 
   int j,i, pivot;
   unsigned int num_permutations = 0;
-  double mult;
+  nml_data_t mult;
 
   for(j = 0; j < U->num_cols; j++) {
     // Retrieves the row with the biggest element for column (j)
@@ -908,11 +908,11 @@ nml_mat_lup *nml_mat_lup_solve(nml_mat *m) {
 // by multiplying the main diagonal of matrix U with the sign.
 // the sign is -1 if the number of permutations is odd
 // the sign is +1 if the number of permutations is even
-double nml_mat_det(nml_mat_lup* lup) {
+nml_data_t nml_mat_det(nml_mat_lup* lup) {
   int k;
   int sign = (lup->num_permutations%2==0) ? 1 : -1;
   nml_mat *U = lup->U;
-  double product = 1.0;
+  nml_data_t product = 1.0;
   for(k = 0; k < U->num_rows; k++) {
     product *= U->data[k][k];
   }
@@ -956,7 +956,7 @@ nml_mat *nml_mat_lu_get(nml_mat_lup* lup) {
 nml_mat *nml_ls_solvefwd(nml_mat *L, nml_mat *b) {
   nml_mat* x = nml_mat_new(L->num_cols, 1);
   int i,j;
-  double tmp;
+  nml_data_t tmp;
   for(i = 0; i < L->num_cols; i++) {
     tmp = b->data[i][0];
     for(j = 0; j < i ; j++) {
@@ -984,7 +984,7 @@ nml_mat *nml_ls_solvefwd(nml_mat *L, nml_mat *b) {
 nml_mat *nml_ls_solvebck(nml_mat *U, nml_mat *b) {
   nml_mat *x = nml_mat_new(U->num_cols, 1);
   int i = U->num_cols, j;
-  double tmp;
+  nml_data_t tmp;
   while(i-->0) {
     tmp = b->data[i][0];
     for(j = i; j < U->num_cols; j++) {
@@ -1060,7 +1060,7 @@ nml_mat *nml_mat_inv(nml_mat_lup *lup) {
 // Represents the (dot) product of two vectors:
 // vector1 = m1col column from m1
 // vector2 = m2col column from m2
-double nml_vect_dot(nml_mat *m1, unsigned int m1col, nml_mat *m2, unsigned m2col) {
+nml_data_t nml_vect_dot(nml_mat *m1, unsigned int m1col, nml_mat *m2, unsigned m2col) {
   if (m1->num_rows!=m2->num_rows) {
     NML_FERROR(CANNOT_VECT_DOT_DIMENSIONS, m1->num_rows, m2->num_rows);
   }
@@ -1071,7 +1071,7 @@ double nml_vect_dot(nml_mat *m1, unsigned int m1col, nml_mat *m2, unsigned m2col
     NML_FERROR(CANNOT_GET_COLUMN, m2col, m2->num_cols);
   }
   int i;
-  double dot = 0.0;
+  nml_data_t dot = 0.0;
   for(i = 0; i < m1->num_rows; i++) {
     dot += m1->data[i][m1col] * m2->data[i][m2col];
   }
@@ -1079,11 +1079,11 @@ double nml_vect_dot(nml_mat *m1, unsigned int m1col, nml_mat *m2, unsigned m2col
 }
 
 // Calculates the l2 norm for a colum in the matrix
-double nml_mat_col_l2norm(nml_mat *m, unsigned int col) {
+nml_data_t nml_mat_col_l2norm(nml_mat *m, unsigned int col) {
   if (col >= m->num_cols) {
     NML_FERROR(CANNOT_COLUMN_L2NORM, col, m->num_cols);
   }
-  double doublesum = 0.0;
+  nml_data_t doublesum = 0.0;
   int i;
   for(i = 0; i < m->num_rows; i++) {
     doublesum += (m->data[i][col]*m->data[i][col]);
@@ -1096,7 +1096,7 @@ double nml_mat_col_l2norm(nml_mat *m, unsigned int col) {
 nml_mat *nml_mat_l2norm(nml_mat *m) {
   int i, j;
   nml_mat *r = nml_mat_new(1, m->num_cols);
-  double square_sum;
+  nml_data_t square_sum;
   for(j = 0; j < m->num_cols; j++) {
     square_sum = 0.0;
     for(i = 0; i < m->num_rows; i++) {
@@ -1151,8 +1151,8 @@ nml_mat_qr *nml_mat_qr_solve(nml_mat *m) {
   nml_mat *R = nml_mat_new(m->num_rows, m->num_cols);
 
   int j, k;
-  double l2norm;
-  double rkj;
+  nml_data_t l2norm;
+  nml_data_t rkj;
   nml_mat *aj;
   nml_mat *qk;
   for(j=0; j < m->num_cols; j++) {    
