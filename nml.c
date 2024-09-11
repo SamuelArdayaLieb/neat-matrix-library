@@ -146,6 +146,31 @@ nml_mat *nml_mat_new(unsigned int num_rows, unsigned int num_cols) {
   return m;
 }
 
+// Initializes a matrix struct from given memory.
+bool nml_mat_new_r(
+  unsigned int num_rows, unsigned int num_cols, nml_mat *m, nml_data_t *data[], nml_data_t memory[]) {
+  if (num_rows == 0) {
+    NML_ERROR(INVALID_ROWS);
+    return false;
+  }
+  if (num_cols == 0) {
+    NML_ERROR(INVALID_COLS);
+    return false;
+  }
+  NP_CHECK(m);
+  m->num_rows = num_rows;
+  m->num_cols = num_cols;
+  m->is_square = (num_rows == num_cols) ? true : false;
+  m->data = data;
+  NP_CHECK(m->data);
+  int i;
+  for(i = 0; i < m->num_rows; ++i) {
+    m->data[i] = &memory[i*m->num_cols];
+    NP_CHECK(m->data[i]);
+  }
+  return true;
+}
+
 nml_mat *nml_mat_rnd(unsigned int num_rows, unsigned int num_cols, nml_data_t min, nml_data_t max) {
   nml_mat *r = nml_mat_new(num_rows, num_cols);
   int i, j;
@@ -155,6 +180,15 @@ nml_mat *nml_mat_rnd(unsigned int num_rows, unsigned int num_cols, nml_data_t mi
     }
   }
   return r;
+}
+
+void nml_mat_rnd_r(nml_data_t min, nml_data_t max, nml_mat *m) {
+  int i, j;
+  for(i = 0; i < m->num_rows; i++) {
+    for(j = 0; j < m->num_cols; j++) {
+      m->data[i][j] = nml_rand_interval(min, max);
+    }
+  }
 }
 
 // Dynamically alloctes a new matrix struct
@@ -180,18 +214,15 @@ nml_mat *nml_mat_eye(unsigned int size) {
   return r;
 }
 
-// Dynamically allocates a new matrix struct
-// Initialise the matrix by reading values from a vector
-nml_mat *nml_mat_from(unsigned int num_rows, unsigned int num_cols, unsigned int n_vals, nml_data_t *vals) {
-  nml_mat *m = nml_mat_new(num_rows, num_cols);
-  int i, j, v_idx;
-  for(i = 0; i < m->num_rows; i++) {
-    for(j = 0; j < m->num_cols; j++) {
-      v_idx = i * m->num_cols + j;
-      m->data[i][j] = (v_idx < n_vals) ? vals[v_idx] : 0.0;
-    }
+bool nml_mat_eye_r(nml_mat *m) {
+  if (!m->is_square) {
+    return false;
   }
-  return m;
+  int i;
+  for(i = 0; i < m->num_rows; i++) {
+    m->data[i][i] = 1.0;
+  }
+  return true;
 }
 
 // Dynamically allocates a new Matrix
@@ -205,6 +236,33 @@ nml_mat *nml_mat_cp(nml_mat *m) {
     }
   }
   return r;
+}
+
+bool nml_mat_cp_r(nml_mat *m1, nml_mat *m2) {
+  if (!nml_mat_eqdim(m1, m2)) {
+    return false;
+  }
+  int i,j;
+  for(i = 0; i < m2->num_rows; i++) {
+    for(j = 0; j < m2->num_cols; j++) {
+      m2->data[i][j] = m1->data[i][j];
+    }
+  }
+  return true;
+}
+
+// Dynamically allocates a new matrix struct
+// Initialise the matrix by reading values from a vector
+nml_mat *nml_mat_from(unsigned int num_rows, unsigned int num_cols, unsigned int n_vals, nml_data_t *vals) {
+  nml_mat *m = nml_mat_new(num_rows, num_cols);
+  int i, j, v_idx;
+  for(i = 0; i < m->num_rows; i++) {
+    for(j = 0; j < m->num_cols; j++) {
+      v_idx = i * m->num_cols + j;
+      m->data[i][j] = (v_idx < n_vals) ? vals[v_idx] : 0.0;
+    }
+  }
+  return m;
 }
 
 nml_mat *nml_mat_fromfile(const char *file) {
@@ -306,6 +364,10 @@ nml_data_t nml_mat_get(nml_mat *matrix, unsigned int i, unsigned int j) {
   return matrix->data[i][j];
 }
 
+void nml_mat_set(nml_mat *matrix, unsigned int i, unsigned int j, nml_data_t value) {
+  matrix->data[i][j] = value;
+}
+
 nml_mat *nml_mat_col_get(nml_mat *m, unsigned int col) {
   if (col >= m->num_cols) {
     NML_FERROR(CANNOT_GET_COLUMN, col, m->num_cols);
@@ -319,6 +381,27 @@ nml_mat *nml_mat_col_get(nml_mat *m, unsigned int col) {
   return r;
 }
 
+nml_mat *nml_mat_col_mult(nml_mat *m, unsigned int col, nml_data_t num) {
+  nml_mat *r = nml_mat_cp(m);
+  if (!nml_mat_col_mult_r(r, col, num)) {
+    nml_mat_free(r);
+    return NULL;
+  }
+  return r;
+}
+
+bool nml_mat_col_mult_r(nml_mat *m, unsigned int col, nml_data_t num) {
+  if (col>=m->num_cols) {
+    NML_FERROR(CANNOT_COL_MULTIPLY, col, m->num_cols);
+    return false;
+  }
+  int i;
+  for(i = 0; i < m->num_rows; i++) {
+    m->data[i][col] *= num;
+  }
+  return true;
+}
+
 nml_mat *nml_mat_row_get(nml_mat *m, unsigned int row) {
   if (row >= m->num_rows) {
     NML_FERROR(CANNOT_GET_ROW, row, m->num_rows);
@@ -329,8 +412,25 @@ nml_mat *nml_mat_row_get(nml_mat *m, unsigned int row) {
   return r;
 }
 
-void nml_mat_set(nml_mat *matrix, unsigned int i, unsigned int j, nml_data_t value) {
-  matrix->data[i][j] = value;
+nml_mat *nml_mat_row_mult(nml_mat *m, unsigned int row, nml_data_t num) {
+  nml_mat *r = nml_mat_cp(m);
+  if (!nml_mat_row_mult_r(r, row, num)) {
+    nml_mat_free(r);
+    return NULL;
+  }
+  return r;
+}
+
+bool nml_mat_row_mult_r(nml_mat *m, unsigned int row, nml_data_t num) {
+  if (row>= m->num_rows) {
+    NML_FERROR(CANNOT_ROW_MULTIPLY, row, m->num_rows);
+    return false;
+  }
+  int i;
+  for(i=0; i < m->num_cols; i++) {
+    m->data[row][i] *= num;
+  }
+  return true;
 }
 
 // Sets all elements of a matrix to a given value
@@ -344,58 +444,16 @@ void nml_mat_all_set(nml_mat *matrix, nml_data_t value) {
 }
 
 // Sets all elements of the matrix to given value
-int nml_mat_diag_set(nml_mat *m, nml_data_t value) {
+bool nml_mat_diag_set(nml_mat *m, nml_data_t value) {
   if (!m->is_square) {
     NML_FERROR(CANNOT_SET_DIAG, value);
-    return 0;
+    return false;
   }
   int i;
   for(i = 0; i < m->num_rows; i++) {
     m->data[i][i] = value;
   }
-  return 1;
-}
-
-nml_mat *nml_mat_row_mult(nml_mat *m, unsigned int row, nml_data_t num) {
-  nml_mat *r = nml_mat_cp(m);
-  if (!nml_mat_row_mult_r(r, row, num)) {
-    nml_mat_free(r);
-    return NULL;
-  }
-  return r;
-}
-
-int nml_mat_row_mult_r(nml_mat *m, unsigned int row, nml_data_t num) {
-  if (row>= m->num_rows) {
-    NML_FERROR(CANNOT_ROW_MULTIPLY, row, m->num_rows);
-    return 0;
-  }
-  int i;
-  for(i=0; i < m->num_cols; i++) {
-    m->data[row][i] *= num;
-  }
-  return 1;
-}
-
-nml_mat *nml_mat_col_mult(nml_mat *m, unsigned int col, nml_data_t num) {
-  nml_mat *r = nml_mat_cp(m);
-  if (!nml_mat_col_mult_r(r, col, num)) {
-    nml_mat_free(r);
-    return NULL;
-  }
-  return r;
-}
-
-int nml_mat_col_mult_r(nml_mat *m, unsigned int col, nml_data_t num) {
-  if (col>=m->num_cols) {
-    NML_FERROR(CANNOT_COL_MULTIPLY, col, m->num_cols);
-    return 0;
-  }
-  int i;
-  for(i = 0; i < m->num_rows; i++) {
-    m->data[i][col] *= num;
-  }
-  return 1;
+  return true;
 }
 
 nml_mat *nml_mat_row_addrow(nml_mat *m, unsigned int where, unsigned int row, nml_data_t multiplier) {
@@ -407,17 +465,16 @@ nml_mat *nml_mat_row_addrow(nml_mat *m, unsigned int where, unsigned int row, nm
   return r;
 }
 
-int nml_mat_row_addrow_r(nml_mat *m, unsigned int where, unsigned int row, nml_data_t multiplier) {
-
+bool nml_mat_row_addrow_r(nml_mat *m, unsigned int where, unsigned int row, nml_data_t multiplier) {
   if (where >= m->num_rows || row >= m->num_rows) {
     NML_FERROR(CANNOT_ADD_TO_ROW, multiplier, row, where, m->num_rows);
-    return 0;
+    return false;
   }
   int i = 0;
   for(i = 0; i < m->num_cols; i++) {
     m->data[where][i] += multiplier * m->data[row][i];
   }
-  return 1;
+  return true;
 }
 
 nml_mat *nml_mat_smult(nml_mat *m, nml_data_t num) {
@@ -426,14 +483,13 @@ nml_mat *nml_mat_smult(nml_mat *m, nml_data_t num) {
   return r;
 }
 
-int nml_mat_smult_r(nml_mat *m, nml_data_t num) {
+void nml_mat_smult_r(nml_mat *m, nml_data_t num) {
   int i, j;
   for(i = 0; i < m->num_rows; i++) {
     for(j = 0; j < m->num_cols; j++) {
       m->data[i][j] *= num;
     }
   }
-  return 1;
 }
 
 // *****************************************************************************
@@ -485,15 +541,15 @@ nml_mat *nml_mat_row_swap(nml_mat *m, unsigned int row1, unsigned int row2) {
   return r;
 }
 
-int nml_mat_row_swap_r(nml_mat *m, unsigned int row1, unsigned int row2) {
+bool nml_mat_row_swap_r(nml_mat *m, unsigned int row1, unsigned int row2) {
   if (row1 >= m->num_rows || row2 >= m->num_rows) {
     NML_FERROR(CANNOT_SWAP_ROWS, row1, row2, m->num_rows);
-    return 0;
+    return true;
   }
   nml_data_t *tmp = m->data[row2];
   m->data[row2] = m->data[row1];
   m->data[row1] = tmp;
-  return 1;
+  return false;
 }
 
 nml_mat *nml_mat_col_swap(nml_mat *m, unsigned int col1, unsigned int col2) {
@@ -505,10 +561,10 @@ nml_mat *nml_mat_col_swap(nml_mat *m, unsigned int col1, unsigned int col2) {
   return r;
 }
 
-int nml_mat_col_swap_r(nml_mat *m, unsigned int col1, unsigned int col2) {
+bool nml_mat_col_swap_r(nml_mat *m, unsigned int col1, unsigned int col2) {
   if (col1 >= m->num_cols || col2 >= m->num_cols) {
     NML_FERROR(CANNOT_SWAP_ROWS, col1, col2, m->num_cols);
-    return 0;
+    return false;
   }
   nml_data_t tmp;
   int j;
@@ -517,7 +573,7 @@ int nml_mat_col_swap_r(nml_mat *m, unsigned int col1, unsigned int col2) {
     m->data[j][col1] = m->data[j][col2];
     m->data[j][col2] = tmp;
   }
-  return 1;
+  return true;
 }
 
 nml_mat *nml_mat_cath(unsigned int mnum, nml_mat **marr) {
@@ -617,9 +673,6 @@ nml_mat *nml_mat_catv(unsigned int mnum, nml_mat **marr) {
 // Matrix Operations
 //
 // *****************************************************************************
-//
-// Matrix Operations
-//
 
 nml_mat *nml_mat_add(nml_mat *m1, nml_mat *m2) {
   nml_mat *r = nml_mat_cp(m1);
@@ -630,10 +683,10 @@ nml_mat *nml_mat_add(nml_mat *m1, nml_mat *m2) {
   return r;
 }
 
-int nml_mat_add_r(nml_mat *m1, nml_mat *m2) {
+bool nml_mat_add_r(nml_mat *m1, nml_mat *m2) {
   if (!nml_mat_eqdim(m1, m2)) {
     NML_ERROR(CANNOT_ADD);
-    return 0;
+    return false;
   }
   int i, j;
   for(i = 0; i < m1->num_rows; i++) {
@@ -641,7 +694,7 @@ int nml_mat_add_r(nml_mat *m1, nml_mat *m2) {
       m1->data[i][j] += m2->data[i][j];
     }
   }
-  return 1;
+  return true;
 }
 
 nml_mat *nml_mat_sub(nml_mat *m1, nml_mat *m2) {
@@ -653,10 +706,10 @@ nml_mat *nml_mat_sub(nml_mat *m1, nml_mat *m2) {
   return r;
 }
 
-int nml_mat_sub_r(nml_mat *m1, nml_mat *m2) {
+bool nml_mat_sub_r(nml_mat *m1, nml_mat *m2) {
   if (!nml_mat_eqdim(m1, m2)) {
     NML_ERROR(CANNOT_SUBTRACT);
-    return 0;
+    return false;
   }
   int i, j;
   for(i = 0; i < m1->num_rows; i++) {
@@ -664,7 +717,7 @@ int nml_mat_sub_r(nml_mat *m1, nml_mat *m2) {
       m1->data[i][j] -= m2->data[i][j];
     }
   }
-  return 1;
+  return true;
 }
 
 nml_mat *nml_mat_dot(nml_mat *m1, nml_mat *m2) {
@@ -684,6 +737,26 @@ nml_mat *nml_mat_dot(nml_mat *m1, nml_mat *m2) {
   return r;
 }
 
+bool nml_mat_dot_r(nml_mat *m1, nml_mat *m2, nml_mat *r)
+{
+  if (m1->num_cols != m2->num_rows) {
+    NML_ERROR(CANNOT_MULITPLY);
+    return false;
+  }
+  if ((r->num_rows != m1->num_rows) || (r->num_cols != m2->num_cols)) {
+    return false;
+  }
+  int i, j, k;
+  for(i = 0; i < r->num_rows; i++) {
+    for(j = 0; j < r->num_cols; j++) {
+      for(k = 0; k < m1->num_cols; k++) {
+        r->data[i][j] += m1->data[i][k] * m2->data[k][j];
+      }
+    }
+  }
+  return true;
+}
+
 nml_mat *nml_mat_transp(nml_mat *m) {
   int i, j;
   nml_mat *r = nml_mat_new(m->num_cols, m->num_rows);
@@ -693,6 +766,20 @@ nml_mat *nml_mat_transp(nml_mat *m) {
     }
   }
   return r;
+}
+
+bool nml_mat_transp_r(nml_mat *m, nml_mat *r)
+{
+  if ((r->num_rows != m->num_cols) || (r->num_cols != m->num_rows)) {
+    return false;
+  }
+  int i, j;
+  for(i = 0; i < r->num_rows; i++) {
+    for(j = 0; j < r->num_cols; j++) {
+      r->data[i][j] = m->data[j][i];
+    }
+  }
+  return true;
 }
 
 nml_data_t nml_mat_trace(nml_mat* m) {

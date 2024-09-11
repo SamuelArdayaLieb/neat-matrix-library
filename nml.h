@@ -56,11 +56,16 @@ typedef struct nml_mat_qr_s {
 //
 // *****************************************************************************
 nml_mat *nml_mat_new(unsigned int num_rows, unsigned int num_cols);
+bool nml_mat_new_r(
+  unsigned int num_rows, unsigned int num_cols, nml_mat *m, nml_data_t *data[], nml_data_t memory[]);
 nml_mat *nml_mat_rnd(unsigned int num_rows, unsigned int num_cols, nml_data_t min, nml_data_t max);
+void nml_mat_rnd_r(nml_data_t min, nml_data_t max, nml_mat *m);
 nml_mat *nml_mat_sqr(unsigned int size);
 nml_mat *nml_mat_sqr_rnd(unsigned int size, nml_data_t min, nml_data_t max);
 nml_mat *nml_mat_eye(unsigned int size);
+bool nml_mat_eye_r(nml_mat *m);
 nml_mat *nml_mat_cp(nml_mat *m);
+bool nml_mat_cp_r(nml_mat *m1, nml_mat *m2);
 nml_mat *nml_mat_from(unsigned int num_rows, unsigned int num_cols, unsigned int n_vals, nml_data_t *vals);
 nml_mat *nml_mat_fromfile(const char *file);
 nml_mat *nml_mat_fromfilef(FILE *f);
@@ -91,16 +96,16 @@ nml_data_t nml_mat_get(nml_mat *matrix, unsigned int i, unsigned int j);
 void nml_mat_set(nml_mat *matrix, unsigned int i, unsigned int j, nml_data_t value);
 nml_mat *nml_mat_col_get(nml_mat *m, unsigned int col);
 nml_mat *nml_mat_col_mult(nml_mat *m, unsigned int col, nml_data_t num);
-int nml_mat_col_mult_r(nml_mat *m, unsigned int col, nml_data_t num);
+bool nml_mat_col_mult_r(nml_mat *m, unsigned int col, nml_data_t num);
 nml_mat *nml_mat_row_get(nml_mat *m, unsigned int row);
 nml_mat *nml_mat_row_mult(nml_mat *m, unsigned int row, nml_data_t num);
-int nml_mat_row_mult_r(nml_mat *m, unsigned int row, nml_data_t num);
+bool nml_mat_row_mult_r(nml_mat *m, unsigned int row, nml_data_t num);
 void nml_mat_all_set(nml_mat *matrix, nml_data_t value);
-int nml_mat_diag_set(nml_mat *matrix, nml_data_t value);
+bool nml_mat_diag_set(nml_mat *matrix, nml_data_t value);
 nml_mat *nml_mat_row_addrow(nml_mat *m, unsigned int where, unsigned int row, nml_data_t multiplier);
-int nml_mat_row_addrow_r(nml_mat *m, unsigned int where, unsigned int row, nml_data_t multiplier);
+bool nml_mat_row_addrow_r(nml_mat *m, unsigned int where, unsigned int row, nml_data_t multiplier);
 nml_mat *nml_mat_smult(nml_mat *m, nml_data_t num);
-int nml_mat_smult_r(nml_mat *m, nml_data_t num);
+void nml_mat_smult_r(nml_mat *m, nml_data_t num);
 
 // *****************************************************************************
 //
@@ -110,9 +115,9 @@ int nml_mat_smult_r(nml_mat *m, nml_data_t num);
 nml_mat *nml_mat_col_rem(nml_mat *m, unsigned int column);
 nml_mat *nml_mat_row_rem(nml_mat *m, unsigned int row);
 nml_mat *nml_mat_row_swap(nml_mat *m, unsigned int row1, unsigned int row2);
-int nml_mat_row_swap_r(nml_mat *m, unsigned int row1, unsigned int row2);
+bool nml_mat_row_swap_r(nml_mat *m, unsigned int row1, unsigned int row2);
 nml_mat *nml_mat_col_swap(nml_mat *m, unsigned int col1, unsigned int col2);
-int nml_mat_col_swap_r(nml_mat *m, unsigned int col1, unsigned int col2);
+bool nml_mat_col_swap_r(nml_mat *m, unsigned int col1, unsigned int col2);
 nml_mat *nml_mat_cath(unsigned int mnun, nml_mat **matrices);
 nml_mat *nml_mat_catv(unsigned int mnum, nml_mat **matrices);
 
@@ -122,12 +127,14 @@ nml_mat *nml_mat_catv(unsigned int mnum, nml_mat **matrices);
 //
 // *****************************************************************************
 nml_mat *nml_mat_add(nml_mat *m1, nml_mat *m2);
-int nml_mat_add_r(nml_mat *m1, nml_mat *m2);
+bool nml_mat_add_r(nml_mat *m1, nml_mat *m2);
 nml_mat *nml_mat_sub(nml_mat *m1, nml_mat *m2);
-int nml_mat_sub_r(nml_mat *m1, nml_mat *m2);
+bool nml_mat_sub_r(nml_mat *m1, nml_mat *m2);
 nml_mat *nml_mat_dot(nml_mat *m1, nml_mat *m2);
+bool nml_mat_dot_r(nml_mat *m1, nml_mat *m2, nml_mat *r);
 nml_mat *nml_mat_transp(nml_mat *m);
-nml_data_t nml_mat_trace(nml_mat* m);
+bool nml_mat_transp_r(nml_mat *m, nml_mat *r);
+nml_data_t nml_mat_trace(nml_mat *m);
 
 // *****************************************************************************
 //
